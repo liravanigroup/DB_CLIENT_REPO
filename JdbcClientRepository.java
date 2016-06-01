@@ -16,7 +16,7 @@ import java.util.List;
  * 2016-06-01.
  */
 
-public class JdbcClientRepository implements Repository<Client>{
+public class JdbcClientRepository implements Repository<Client> {
 
 
     private final String url;
@@ -36,21 +36,21 @@ public class JdbcClientRepository implements Repository<Client>{
     }
 
     @Override
-    public Client load(String number) {
+    public Client load(String name) {
         try (Connection connection = getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT id, name, address, amount_cents, amount_currency, active, status FROM clients WHERE name = ?");
-            statement.setString(1, number);
+            statement.setString(1, name);
             ResultSet rs = statement.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 return ClientFactory.getClientInstance(
                         rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("address"),
-                        new Money(rs.getInt("amount_cents") / 100D, rs.getString("amount_currency")),
+                        new Money(rs.getInt("amount_cents"), rs.getString("amount_currency")),
                         ClientStatus.values()[rs.getInt("status")],
                         rs.getBoolean("active")
                 );
-            }else{
+            } else {
                 return null;
             }
         } catch (SQLException e) {
@@ -61,8 +61,12 @@ public class JdbcClientRepository implements Repository<Client>{
     @Override
     public void save(Client client) {
         try (Connection connection = getConnection()) {
+            String sql = load(client.getName()) == null ?
+                    "INSERT INTO clients (name, address, amount_cents, amount_currency, active, status) VALUES(?,?,?,?,?,?)" :
+                    "UPDATE clients SET name = ?, address = ?, amount_cents = ?, amount_currency = ?, active = ?, status = ? WHERE name = '" +  client.getName() + "'";
 
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO clients (name, address, amount_cents, amount_currency, active, status) VALUES(?,?,?,?,?,?)");
+            PreparedStatement statement = connection.prepareStatement(sql);
+
             statement.setString(1, client.getName());
             statement.setString(2, client.getAddress());
             statement.setInt(3, client.getAmountCents());
@@ -70,12 +74,12 @@ public class JdbcClientRepository implements Repository<Client>{
             statement.setBoolean(5, client.isActive());
             statement.setInt(6, client.getStatusIndex());
 
-            statement.execute();
-
+            statement.executeUpdate();
         } catch (SQLException e) {
             throw new DataAccessException(e, e.getMessage());
         }
     }
+
 
     @Override
     public List find(String number) {

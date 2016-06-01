@@ -17,7 +17,7 @@ import static pl.com.bottega.photostock.sales.model.users.ClientStatus.STANDARD;
 
 public class JdbcClientRepositoryTest {
     private Repository repo;
-    private final static Client INIT_CLIENT = ClientFactory.getClientInstance("1", "Agnieszka", "London", Money.FIVE_PL, STANDARD, true);
+    private final static Client INIT_CLIENT = ClientFactory.getClientInstance("1", "Agnieszka", "London", new Money(50), STANDARD, true);
 
     @Before
     public void setUp() throws SQLException {
@@ -53,7 +53,7 @@ public class JdbcClientRepositoryTest {
     }
 
     private void insertTestClient(Connection connection) throws SQLException {
-        connection.createStatement().executeUpdate("INSERT INTO Clients (name, address, amount_cents, amount_currency, status, active) VALUES ('Agnieszka','London', 500, 'PLN', 0, true);");
+        connection.createStatement().executeUpdate("INSERT INTO Clients (name, address, amount_cents, amount_currency, status, active) VALUES ('Agnieszka','London', 50, 'PLN', 0, true);");
     }
 
     private void createClientsTable(Connection connection) throws SQLException {
@@ -80,5 +80,23 @@ public class JdbcClientRepositoryTest {
 
         //then
         Assert.assertEquals(savedClient.getName(),loadedClient.getName());
+    }
+
+    @Test
+    public void shouldUpdateClient(){
+        // given
+        Client savedClient = new Client("Jan Kowalski", "", "London", new Money(100));
+        Client updatedClient = new Client("Jan Kowalski", "", "Boston", new Money(50));
+
+        repo.save(savedClient);
+        repo.save(updatedClient);
+
+        //When
+        Client loadedClientAfterUpdate = (Client) repo.load("Jan Kowalski");
+
+        //then
+        Assert.assertEquals(updatedClient.getName(),loadedClientAfterUpdate.getName());
+        Assert.assertEquals(updatedClient.getAddress(),loadedClientAfterUpdate.getAddress());
+        Assert.assertEquals(updatedClient.getSaldo(),loadedClientAfterUpdate.getSaldo());
     }
 }
