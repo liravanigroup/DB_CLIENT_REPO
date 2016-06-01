@@ -80,15 +80,4 @@ public class JdbcClientRepository implements Repository<Client> {
         }
     }
 
-
-    @Override
-    public List find(String number) {
-        return null;
-    }
-
-    @Override
-    public Reservation findOpenedPer(Client client) {
-        return null;
-    }
-
 }
