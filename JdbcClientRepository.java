@@ -25,7 +25,6 @@ public class JdbcClientRepository implements Repository<Client> {
 
 
     public JdbcClientRepository(String url, String login, String password) throws SQLException {
-        super();
         this.url = url;
         this.login = login;
         this.password = password;
